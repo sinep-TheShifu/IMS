@@ -1,4 +1,4 @@
-#include <iostream> 
+#include <iostream>
 #include <queue>    // priority_queue
 #include <cstdlib>  // exit()
 #include "simlib.h"
@@ -13,7 +13,7 @@ void error(const char *msg)
 }
 
 // System input model 
-class Generator : public Event 
+class Generator : public Event
 {
     void Behaviour()
     {
@@ -22,8 +22,8 @@ class Generator : public Event
     }
 }
 
-Facility Box("Box");
-Store 
+        Facility Box("Box");
+Store
 
 // Time of model
 double Time;
@@ -41,7 +41,7 @@ int main()
 
     while (!calendar.empty())
     {
-        
+
     }
-    
+
 }
