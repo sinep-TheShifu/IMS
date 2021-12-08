@@ -12,18 +12,28 @@ void error(const char *msg)
     exit(1);
 }
 
-Facility narocne("Narocne");
-Facility normalni("Normalni");
+Facility myciBox("MyciBox");
+Store zamestnanecNaDesign("zamestnanecNaDesign", 2);
 
-class Zakaznik : public Process {
+// pozadavek od zakaznika na polep, design nebo cisteni auta
+class Pozadavek : public Process {
     void Behavior(){
-        if (Uniform(0,100) <= 33){
-            Seize(narocne);
-            cout << "*** Zabiram narocne ***" << endl;
-            Wait(Exponential(45));
-            Release(narocne);
-        } else {
+        int rozdeleni = Uniform(0,100);
+        if (rozdeleni <= 20 ){
+            Enter(zamestnanecNaDesign, 1);
+            cout << "Info: Zabiram 1 zamestance na design" << endl;
+            Seize(myciBox);
+            cout << "Info: Zabiram myci box pred designem auta" << endl;
+            Wait(Normal(120)); // myti auta
+            Release(myciBox);
+            cout << "Info: Uvolnuji myci box a jdu na tvorbu designu" << endl;
+            Wait(Normal(7200)); // tvorba designu
 
+            Leave(zamestnanecNaDesign, 1)
+        } else  if(rozdeleni > 20 && rozdeleni <= 40){
+            // cisteni auta
+        } else if ( rozdeleni > 40){
+            // polep designem
         }
     }
 };
@@ -32,7 +42,7 @@ class Zakaznik : public Process {
 class Generator : public Event {
     void Behavior()
     {
-        (new Zakaznik)->Activate();
+        (new Pozadavek)->Activate();
         Activate(Time+Exponential(20));  // TODO
     }
 };
