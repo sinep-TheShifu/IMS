@@ -12,18 +12,30 @@ void error(const char *msg)
     exit(1);
 }
 
-// System input model 
-class Generator : public Event
-{
-    void Behaviour()
-    {
-        (new Customer)->Activate();
-        Activate(Time+Exponential(1));  // TODO 
-    }
-}
+Facility narocne("Narocne");
+Facility normalni("Normalni");
 
-        Facility Box("Box");
-Store
+class Zakaznik : public Process {
+    void Behavior(){
+        if (Uniform(0,100) <= 33){
+            Seize(narocne);
+            cout << "*** Zabiram narocne ***" << endl;
+            Wait(Exponential(45));
+            Release(narocne);
+        } else {
+
+        }
+    }
+};
+
+// System input model 
+class Generator : public Event {
+    void Behavior()
+    {
+        (new Zakaznik)->Activate();
+        Activate(Time+Exponential(20));  // TODO
+    }
+};
 
 // Time of model
 double Time;
@@ -31,17 +43,21 @@ double Time;
 int main()
 {
 
-    cout << "*** Inicializacia" << endl;
+    cout << "*** Inicializacia ***" << endl;
 
-    Time = 0;
+    Init(0,1000);
+    (new Generator)->Activate();
+    Run();
 
-    cout << "Time = " << Time << endl;
+    //Time = 0;
 
-    schedule(event1, Time);     // Prva aktivacia
+    //cout << "Time = " << Time << endl;
 
-    while (!calendar.empty())
-    {
+    //schedule(event1, Time);     // Prva aktivacia
 
-    }
+    //while (!calendar.empty())
+    //{
+
+    //}
 
 }
