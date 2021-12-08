@@ -65,7 +65,7 @@ class Generator : public Event {
     void Behavior()
     {
         (new Pozadavek)->Activate();
-        Activate(Time+Exponential(8));  // TODO
+        Activate(Time+Exponential(480));  // TODO
     }
 };
 
@@ -77,7 +77,7 @@ int main()
 
     cout << "*** Inicializacia ***" << endl;
 
-    Init(0,10000);
+    Init(0,14400); // 30 dni (po 8 hodinach)
     (new Generator)->Activate();
     Run();
 
