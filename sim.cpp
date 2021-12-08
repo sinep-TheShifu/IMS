@@ -83,8 +83,11 @@ class Generator : public Event {
 // Time of model
 double Time;
 
-int main()
-{
+int main(){
+
+    SetOutput("polepy-out.dat");
+    Print("Model firmy na polepy aut");
+
 
     cout << "*** Inicializacia ***" << endl;
 
@@ -92,15 +95,5 @@ int main()
     (new Generator)->Activate();
     Run();
 
-    //Time = 0;
-
-    //cout << "Time = " << Time << endl;
-
-    //schedule(event1, Time);     // Prva aktivacia
-
-    //while (!calendar.empty())
-    //{
-
-    //}
-
+    SIMLIB_statistics.Output();
 }
