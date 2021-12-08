@@ -22,6 +22,7 @@ class Pozadavek : public Process {
     void Behavior(){
         int rozdeleni = Uniform(0,100);
         if (rozdeleni <= 20 ){
+            // polep designem
             Enter(zamestnanecNaDesign, 1);
             cout << "Info: Zabiram 1 zamestance na design" << endl;
             Seize(myciBox);
@@ -43,7 +44,18 @@ class Pozadavek : public Process {
         } else  if(rozdeleni > 20 && rozdeleni <= 40){
             // cisteni auta
         } else if ( rozdeleni > 40){
-            // polep designem
+            // polep standardni
+            Enter(zamestnanecNaLepeni, 1);
+            cout << "Info: Zabiram 1 zamestance na polep" << endl;
+            Seize(myciBox);
+            cout << "Info: Zabiram myci box pred polepem auta" << endl;
+            Wait(Exponential(120)); // myti auta
+            Release(myciBox);
+            cout << "Info: Uvolnuji myci box a jdu na polep" << endl;
+            Wait(Exponential(1200)); // polep auta
+            Leave(zamestnanecNaLepeni, 1);
+            cout << "Info: Uvolnuji zamestance na lepeni, auto je pripravene na predani zakaznikovi" << endl;
+
         }
     }
 };
