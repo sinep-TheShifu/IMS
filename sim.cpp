@@ -14,6 +14,7 @@ void error(const char *msg)
 
 Facility myciBox("MyciBox");
 Store zamestnanecNaDesign("zamestnanecNaDesign", 2);
+Store zamestnanecNaLepeni("zamestanecNaLepeni", 7);
 
 // pozadavek od zakaznika na polep, design nebo cisteni auta
 class Pozadavek : public Process {
@@ -24,12 +25,20 @@ class Pozadavek : public Process {
             cout << "Info: Zabiram 1 zamestance na design" << endl;
             Seize(myciBox);
             cout << "Info: Zabiram myci box pred designem auta" << endl;
-            Wait(Normal(120)); // myti auta
+            Wait(Exponential(120)); // myti auta
             Release(myciBox);
             cout << "Info: Uvolnuji myci box a jdu na tvorbu designu" << endl;
-            Wait(Normal(7200)); // tvorba designu
+            Wait(Exponential(7200)); // tvorba designu
+            Leave(zamestnanecNaDesign, 1);
+            cout << "Info: Uvolnuji zamestance na design a jdu na tisk designu" << endl;
+            Wait(360); // tisk designu
+            cout << "Info: Tisk dokoncen, auto je pripravene na nalepeni designu" << endl;
+            Enter(zamestnanecNaLepeni, 1);
+            cout << "Info: Zabiram 1 zamestance na nalepeni designu" << endl;
+            Wait(Exponential(1500)); // lepeni designu
+            Leave(zamestnanecNaLepeni, 1);
+            cout << "Info: Uvolnuji zamestance na nalepeni designu, auto je pripravene na predani zakaznikovi" << endl;
 
-            Leave(zamestnanecNaDesign, 1)
         } else  if(rozdeleni > 20 && rozdeleni <= 40){
             // cisteni auta
         } else if ( rozdeleni > 40){
@@ -43,7 +52,7 @@ class Generator : public Event {
     void Behavior()
     {
         (new Pozadavek)->Activate();
-        Activate(Time+Exponential(20));  // TODO
+        Activate(Time+Exponential(8));  // TODO
     }
 };
 
@@ -55,7 +64,7 @@ int main()
 
     cout << "*** Inicializacia ***" << endl;
 
-    Init(0,1000);
+    Init(0,10000);
     (new Generator)->Activate();
     Run();
 
