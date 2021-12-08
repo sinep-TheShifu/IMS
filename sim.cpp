@@ -15,6 +15,7 @@ void error(const char *msg)
 Facility myciBox("MyciBox");
 Store zamestnanecNaDesign("zamestnanecNaDesign", 2);
 Store zamestnanecNaLepeni("zamestanecNaLepeni", 7);
+Store zamestnanecNaCisteni("zamestanecNaCisteni", 2);
 
 // pozadavek od zakaznika na polep, design nebo cisteni auta
 class Pozadavek : public Process {
