@@ -42,7 +42,18 @@ class Pozadavek : public Process {
             cout << "Info: Uvolnuji zamestance na nalepeni designu, auto je pripravene na predani zakaznikovi" << endl;
 
         } else  if(rozdeleni > 20 && rozdeleni <= 40){
-            // cisteni auta
+            Enter(zamestnanecNaCisteni, 1);
+            cout << "Info proces cisteni: Zaberam 1 zamestnanca na cistenie auta" << endl;
+            Seize(myciBox);
+            cout << "Info proces cisteni: Zaberam mici box na cistenie auta" << endl;
+            Wait(Exponential(120));
+            Release(myciBox);
+            cout << "Info proces cisteni: Uvolnujem myci box" << endl;
+            cout << "Info proces cisteni: Zacina proces cistenia auta." << endl;
+            Wait(Exponential(360));
+            cout << "Info proces cisteni: Auto je vycistene a pripravene na predaj zakaznikovy" << endl;
+            Leave(zamestnanecNaCisteni, 1);
+            cout << "Info proces cisteni: Uvolnujem 1 zamestnanca na cistenie" << endl;
         } else if ( rozdeleni > 40){
             // polep standardni
             Enter(zamestnanecNaLepeni, 1);
