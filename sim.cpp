@@ -4,13 +4,6 @@
 
 using namespace std;
 
-// Error message and quit program
-void error(const char *msg)
-{
-    cerr << "ERROR: " << msg << endl;
-    exit(1);
-}
-
 // Facilities
 Facility myciBox("MyciBox");
 
@@ -19,9 +12,55 @@ Store zamestnanecNaCisteni("zamestanecNaCisteni", 2);
 Store zamestnanecNaDesign("zamestnanecNaDesign", 2);
 Store zamestnanecNaLepeni("zamestanecNaLepeni", 7);
 Store miestaPreAuta("miestaPreAuta", 8);
+Store autoNaPozicanie("autoNaPozicanie", 2);
 
 // Histogram
-Histogram celk("Celkova doba v systeme", 0, 5, 20);
+Histogram dokonceniePoziadavku("Celkova doba poziadavku v systeme", 0, 1, 10);
+Histogram pozicanieAuta("...", 0, 1, 15);
+
+class PozicanieAuta : public Process 
+{
+    void Behavior()
+    {
+        double prichod = Time;
+        int rozdeleni = Uniform(0, 100);
+
+        // Zakaznik si pozicia auto s 15% pravdepodobnostou
+        if (rozdeleni <= 15)
+        {
+            // Je volne auto na pozicanie
+            if (autoNaPozicanie.Free() != 0)
+            {
+                Enter(autoNaPozicanie, 1);
+                cout << "Pozicanie auta: Zakaznik si pozical 1 auto." << endl;    
+
+                // Najkratsi mozny proces je cistenie vozidla : 2h + 6h = 8h
+                // Najdlhzsi proces je lepenie designom : 2h + 12h + 25h = 39h
+                // + Exp(4h) je priblizna doba vozidla stravena vo frontach
+                Wait(Exponential(480) + Uniform(0, 2340) + Exponential(240));
+
+                Leave(autoNaPozicanie, 1);
+                cout << "Pozicanie auta: Zakaznik vratil pozicane auto." << endl;
+
+                pozicanieAuta(Time - prichod);
+            }
+            // Nieje volne auto na pozicanie
+            else
+            {
+                cout << "Pozicanie auta: Zakaznik si chcel pozicat auto, ale nebolo dostupne." << endl;
+                pozicanieAuta(Time - prichod);
+                return;
+            }
+        } 
+        // Zakaznik si auto nepozicia s 85% pravdepodobnostou
+        else
+        {
+            cout << "Pozicanie auta: Zakaznik si auto nechce pozicat." << endl;
+            pozicanieAuta(Time - prichod);
+            return;
+        }       
+    }
+};
 
 // pozadavek od zakaznika na polep standardny, dizajnom alebo cisteni auta
 class Zakaznik : public Process 
@@ -29,6 +68,8 @@ class Zakaznik : public Process
     // Chovanie procesu
     void Behavior()
     {
+        double prichod = Time;
+
         // Volne parkovacie miesta pre auta v dielni
         if(miestaPreAuta.Free() != 0)
         {
@@ -38,6 +79,9 @@ class Zakaznik : public Process
 
             Enter(miestaPreAuta, 1);
             cout << "Miesta pre auta: Zaberam 1 parkovacie miesto na dielni." << endl;
+
+            // Vytvara sa proces pozicania auta  
+            (new PozicanieAuta)->Activate();
 
             // Cistenie
             if (rozdeleni <= 20) // 20% pravdepodobnost
@@ -61,6 +105,8 @@ class Zakaznik : public Process
 
                 Leave(miestaPreAuta, 1);
                 cout << "Miesta pre auta: Uvolnujem 1 parkovacie miesto na dielni." << endl;
+
+                dokonceniePoziadavku(Time - prichod);
             }
             // Polep dizajnom
             else  if(rozdeleni > 20 && rozdeleni <= 40 ) // 20% pravdepodobnost
@@ -94,7 +140,9 @@ class Zakaznik : public Process
                 cout << "Dizajn info: Uvolnuji 1 zamestance na nalepeni designu" << endl;
 
                 Leave(miestaPreAuta, 1);
-                cout << "Miesta pre auta: Uvolnujem 1 parkovacie miesto na dielni." << endl;                
+                cout << "Miesta pre auta: Uvolnujem 1 parkovacie miesto na dielni." << endl;   
+
+                dokonceniePoziadavku(Time - prichod);
             }
             // Polep standardni
             else if (rozdeleni > 40) // 60% pravdepodobnost
@@ -118,6 +166,8 @@ class Zakaznik : public Process
 
                 Leave(miestaPreAuta, 1);
                 cout << "Miesta pre auta: Uvolnujem 1 parkovacie miesto na dielni." << endl;
+
+                dokonceniePoziadavku(Time - prichod);
             }
         }
         // Nieje volne parkovacie miesto pre auto v dielni
@@ -163,11 +213,11 @@ class Generator : public Event
     void Behavior()
     {
         (new Zakaznik)->Activate();
-            Activate(Time+Exponential(480));  
+            Activate(Time + Exponential(480));  
     }
 };
 
-// Model time
+
 double Time;
 
 // Main
@@ -183,12 +233,19 @@ int main(){
     Run();
 
     // Statistiky
-    celk.Output();
     zamestnanecNaCisteni.Output();
     zamestnanecNaDesign.Output();
     zamestnanecNaLepeni.Output();
+    
+    myciBox.Output();
+    
     miestaPreAuta.Output();
-    //SIMLIB_statistics.Output();
+    autoNaPozicanie.Output();
+
+    pozicanieAuta.Output();
+    dokonceniePoziadavku.Output();
+
+    SIMLIB_statistics.Output();
 }
 
 // Poznamky:
