@@ -1,32 +1,129 @@
 #include <iostream>
 #include <cstdlib>  // exit()
+#include <cstring>
 #include "simlib.h"
 
 using namespace std;
+
+// Globalne premenne
+int pocet_zamestancov_cistenie = 2;
+int pocet_zamestancov_dizajn = 2;
+int pocet_zamestancov_lepenie = 7;
+int pocet_parkovacich_miest = 8;
+int pocet_pozicovanych_aut = 2;
 
 // Facilities
 Facility myciBox("MyciBox");
 
 // Stores
-Store zamestnanecNaCisteni("zamestanecNaCisteni", 2);
-Store zamestnanecNaDesign("zamestnanecNaDesign", 2);
-Store zamestnanecNaLepeni("zamestanecNaLepeni", 7);
-Store miestaPreAuta("miestaPreAuta", 8);
-Store autoNaPozicanie("autoNaPozicanie", 2);
+Store zamestnanecNaCisteni("zamestanecNaCisteni", pocet_zamestancov_cistenie);
+Store zamestnanecNaDesign("zamestnanecNaDesign", pocet_zamestancov_dizajn);
+Store zamestnanecNaLepeni("zamestanecNaLepeni", pocet_zamestancov_lepenie);
+Store miestaPreAuta("miestaPreAuta", pocet_parkovacich_miest);
+Store autoNaPozicanie("autoNaPozicanie", pocet_pozicovanych_aut);
 
 // Histogram
-Histogram dokonceniePoziadavku("Celkova doba poziadavku v systeme", 0, 1, 10);
-Histogram pozicanieAuta("...", 0, 1, 15);
+Histogram dokonceniePoziadavku("Celkova doba poziadavku v systeme", 0, 60, 20);
+Histogram pozicanieAuta("...", 0, 60, 15);
+
+void help()
+{
+    cout << "Help" << endl;
+    exit(0);
+}
+
+void spracovanie_argumentov(int argc, char * argv[])
+{
+    cout << "*** Spracovanie argumentov" << endl;
+    for (int i = 1; i < argc ; i++)
+    {
+        if ((strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) && argv[i + 1] != NULL)
+        {
+            help();
+        }            
+        else if (strcmp(argv[i], "-pzc") == 0 && argv[i + 1] != NULL)        
+        {
+            try
+            {
+                pocet_zamestancov_cistenie = stoi(argv[i + 1]);     
+                cout << "Pocet zamestnancov na cistenie je nastaveny na: " << pocet_zamestancov_cistenie << endl;
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
+            i++;
+        }            
+        else if (strcmp(argv[i], "-pzd") == 0 && argv[i + 1] != NULL)
+        {
+            try
+            {
+                pocet_zamestancov_dizajn = stoi(argv[i + 1]);     
+                cout << "Pocet zamestnancov na dizajn je nastaveny na: " << pocet_zamestancov_dizajn << endl;
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
+            i++;
+        }            
+        else if(strcmp(argv[i], "-pzl") == 0 && argv[i + 1] != NULL)
+        {
+            try
+            {
+                pocet_zamestancov_lepenie = stoi(argv[i + 1]);     
+                cout << "Pocet zamestnancov na lepenie je nastaveny na: " << pocet_zamestancov_lepenie << endl;
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
+            i++;
+        }            
+        else if(strcmp(argv[i], "-ppm") == 0 && argv[i + 1] != NULL)
+        {
+            try
+            {
+                pocet_parkovacich_miest = stoi(argv[i + 1]);     
+                cout << "Pocet parkovacich miest je nastaveny na: " << pocet_parkovacich_miest << endl;
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }    
+            i++;
+        }            
+        else if(strcmp(argv[i], "-ppa") == 0 && argv[i + 1] != NULL)
+        {
+            try
+            {
+                pocet_pozicovanych_aut = stoi(argv[i + 1]);     
+                cout << "Pocet aut na pozicanie je nastaveny na: " << pocet_pozicovanych_aut << endl;
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
+            i++;
+        }            
+        else
+        {
+            perror("Chyba argumentov programu.\n");
+            exit(1);
+        }
+    }    
+    cout << "*** Koniec spracovania agumentov"<< endl;
+    cout << endl;
+}
 
 class PozicanieAuta : public Process 
 {
     void Behavior()
     {
-        double prichod = Time;
-        int rozdeleni = Uniform(0, 100);
+        //double prichod = Time;
+        int pravdepodobnost = Uniform(0, 100);
 
-        // Zakaznik si pozicia auto s 15% pravdepodobnostou
-        if (rozdeleni <= 15)
+        if (pravdepodobnost <= 15)
         {
             // Je volne auto na pozicanie
             if (autoNaPozicanie.Free() != 0)
@@ -41,14 +138,11 @@ class PozicanieAuta : public Process
 
                 Leave(autoNaPozicanie, 1);
                 cout << "Pozicanie auta: Zakaznik vratil pozicane auto." << endl;
-
-                pozicanieAuta(Time - prichod);
             }
             // Nieje volne auto na pozicanie
             else
             {
                 cout << "Pozicanie auta: Zakaznik si chcel pozicat auto, ale nebolo dostupne." << endl;
-                pozicanieAuta(Time - prichod);
                 return;
             }
         } 
@@ -56,35 +150,35 @@ class PozicanieAuta : public Process
         else
         {
             cout << "Pozicanie auta: Zakaznik si auto nechce pozicat." << endl;
-            pozicanieAuta(Time - prichod);
             return;
         }       
     }
 };
 
-// pozadavek od zakaznika na polep standardny, dizajnom alebo cisteni auta
+// Zakaznik
 class Zakaznik : public Process 
 {
-    // Chovanie procesu
     void Behavior()
     {
-        double prichod = Time;
+        //double prichod = Time;
 
         // Volne parkovacie miesta pre auta v dielni
         if(miestaPreAuta.Free() != 0)
         {
 
-        obsluha: 
-            int rozdeleni = Uniform(0, 100);
+            // GOTO pre zakaznika ktory sa druhy krat vracia a je volne miesto
+            obsluha: 
+            int pravdepodobnost = Uniform(0, 100);
 
             Enter(miestaPreAuta, 1);
             cout << "Miesta pre auta: Zaberam 1 parkovacie miesto na dielni." << endl;
 
             // Vytvara sa proces pozicania auta  
             (new PozicanieAuta)->Activate();
+                Activate(Time);
 
             // Cistenie
-            if (rozdeleni <= 20) // 20% pravdepodobnost
+            if (pravdepodobnost <= 20) // 20% pravdepodobnost
             {    
                 Enter(zamestnanecNaCisteni, 1);
                 cout << "Cistenie info: Zaberam 1 zamestnanca na cistenie auta" << endl;
@@ -105,11 +199,9 @@ class Zakaznik : public Process
 
                 Leave(miestaPreAuta, 1);
                 cout << "Miesta pre auta: Uvolnujem 1 parkovacie miesto na dielni." << endl;
-
-                dokonceniePoziadavku(Time - prichod);
             }
             // Polep dizajnom
-            else  if(rozdeleni > 20 && rozdeleni <= 40 ) // 20% pravdepodobnost
+            else  if(pravdepodobnost > 20 && pravdepodobnost <= 40 ) // 20% pravdepodobnost
             {   
                 Enter(zamestnanecNaDesign, 1);
                 cout << "Dizajn info: Zabiram 1 zamestance na design" << endl;
@@ -141,11 +233,9 @@ class Zakaznik : public Process
 
                 Leave(miestaPreAuta, 1);
                 cout << "Miesta pre auta: Uvolnujem 1 parkovacie miesto na dielni." << endl;   
-
-                dokonceniePoziadavku(Time - prichod);
             }
             // Polep standardni
-            else if (rozdeleni > 40) // 60% pravdepodobnost
+            else if (pravdepodobnost > 40) // 60% pravdepodobnost
             {            
                 Enter(zamestnanecNaLepeni, 1);
                 cout << "Lepenie info: Zabiram 1 zamestance na polep" << endl;
@@ -166,8 +256,6 @@ class Zakaznik : public Process
 
                 Leave(miestaPreAuta, 1);
                 cout << "Miesta pre auta: Uvolnujem 1 parkovacie miesto na dielni." << endl;
-
-                dokonceniePoziadavku(Time - prichod);
             }
         }
         // Nieje volne parkovacie miesto pre auto v dielni
@@ -180,14 +268,13 @@ class Zakaznik : public Process
             {
                 cout << "Nebolo volne parkovacie miesto. Zakaznik sa vracia o Exp(8h)." << endl;
 
-                // Vracia sa po 8h
                 Wait(Exponential(480));
 
                 // Miesto pre auto na dielni je volne
                 if (miestaPreAuta.Free() != 0)
                 {
                     cout << "Pri druhom prichode do dielne bolo volne parkovacie miesto. Zakaznik ide do obsluhy." << endl;
-                    // TODO - goto?
+                    // goto?
                     goto obsluha;
                 }
                 // Ziadne miesto nieje volne -> opusta system
@@ -202,13 +289,13 @@ class Zakaznik : public Process
             {
                 cout << "Zakaznik opusta system, pretoze nebolo volne parkovacie miesto." << endl;
                 return;
-            }            
+            }         
         }        
     }
 };
 
-// System input model 
-class Generator : public Event 
+// Generator zakaznikov
+class Generator_Zakaznik : public Event 
 {
     void Behavior()
     {
@@ -217,19 +304,23 @@ class Generator : public Event
     }
 };
 
-
+// Modelovy cas
 double Time;
 
 // Main
-int main(){
+int main(int argc, char * argv[])
+{
+    // Spracovanie argumentov
+    spracovanie_argumentov(argc, argv);
 
+    // Vystupne data simulacie
     SetOutput("polepy_out.dat");
     Print("Model firmy na polepy aut");
 
     cout << "*** Inicializacia ***" << endl;
 
     Init(0,14400); // 30 dni (po 8 hodinach)
-    (new Generator)->Activate();
+    (new Generator_Zakaznik)->Activate();
     Run();
 
     // Statistiky
@@ -247,6 +338,3 @@ int main(){
 
     SIMLIB_statistics.Output();
 }
-
-// Poznamky:
-// - prerusenie cakanie vo fronte pre zakaznikov kazdych 8h?
