@@ -124,7 +124,7 @@ void spracovanie_argumentov(int argc, char * argv[])
 }
 
 // Proces pozicania vozidla
-class Pozicanievozidla : public Process 
+class PozicanieVozidla : public Process 
 {
     void Behavior()
     {
@@ -180,7 +180,7 @@ class Zakaznik : public Process
             cout << "Miesta pre vozidla: Zaberam 1 parkovacie miesto na dielni." << endl;
 
             // Vytvara sa proces pozicania vozidla  
-            (new Pozicanievozidla)->Activate();
+            (new PozicanieVozidla)->Activate();
                 Activate(Time);
 
             // Cistenie
